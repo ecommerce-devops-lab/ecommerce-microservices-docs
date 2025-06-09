@@ -1,0 +1,118 @@
+graph TB
+    subgraph "Google Cloud Platform"
+        subgraph "GCP Infrastructure Module"
+            API1["Container API<br/>container.googleapis.com"]
+            API2["Compute API<br/>compute.googleapis.com"]
+            VPC["VPC Network<br/>ecommerce-vpc"]
+            SUBNET["Subnet<br/>10.10.0.0/24<br/>Pod Range: 192.168.64.0/22<br/>Service Range: 192.168.1.0/24"]
+            GKE["GKE Cluster<br/>Private Cluster<br/>Workload Identity"]
+            NODEPOOL["Node Pool<br/>e2-standard-2<br/>Min: 1, Max: 3<br/>Auto-scaling"]
+        end
+        
+        subgraph "Google Container Registry"
+            GCR["gcr.io/project-id<br/>Docker Images<br/>Tag: v2"]
+        end
+    end
+
+    subgraph "Kubernetes Cluster"
+        subgraph "Kubernetes Base Module"
+            NS["Namespace: ecommerce"]
+            CM1["ConfigMap<br/>ecommerce-config<br/>Eureka, Zipkin URLs"]
+            CM2["ConfigMap<br/>cloud-config-files<br/>Service Configurations"]
+        end
+
+        subgraph "Monitoring Module"
+            ZIPKIN_DEP["Zipkin Deployment<br/>openzipkin/zipkin<br/>Resources: 384Mi-512Mi"]
+            ZIPKIN_SVC["Zipkin Service<br/>LoadBalancer<br/>Port: 9411"]
+        end
+
+        subgraph "Microservices Module"
+            subgraph "Infrastructure Services"
+                SD_DEP["Service Discovery<br/>Eureka Server<br/>Port: 8761<br/>LoadBalancer"]
+                CC_DEP["Cloud Config<br/>Spring Config Server<br/>Port: 9296<br/>ClusterIP"]
+                AG_DEP["API Gateway<br/>Spring Gateway<br/>Port: 8080<br/>LoadBalancer"]
+            end
+
+            subgraph "Business Services"
+                US_DEP["User Service<br/>Port: 8700<br/>ClusterIP"]
+                PS_DEP["Product Service<br/>Port: 8500<br/>ClusterIP"]
+                OS_DEP["Order Service<br/>Port: 8300<br/>ClusterIP"]
+                PMS_DEP["Payment Service<br/>Port: 8400<br/>ClusterIP"]
+                SS_DEP["Shipping Service<br/>Port: 8600<br/>ClusterIP"]
+                FS_DEP["Favourite Service<br/>Port: 8800<br/>ClusterIP"]
+                PC_DEP["Proxy Client<br/>Port: 8900<br/>ClusterIP"]
+            end
+        end
+    end
+
+    subgraph "External Access"
+        INTERNET["Internet"]
+        LB1["Load Balancer<br/>API Gateway"]
+        LB2["Load Balancer<br/>Service Discovery"]
+        LB3["Load Balancer<br/>Zipkin UI"]
+    end
+
+    %% Dependencies
+    API1 --> GKE
+    API2 --> VPC
+    VPC --> SUBNET
+    SUBNET --> GKE
+    GKE --> NODEPOOL
+    
+    %% Module Dependencies
+    GKE -.-> NS
+    NS --> CM1
+    NS --> CM2
+    
+    %% Monitoring Dependencies
+    CM1 --> ZIPKIN_DEP
+    ZIPKIN_DEP --> ZIPKIN_SVC
+    
+    %% Microservices Dependencies
+    ZIPKIN_SVC -.-> SD_DEP
+    CM1 --> SD_DEP
+    CM2 --> CC_DEP
+    SD_DEP -.-> CC_DEP
+    CC_DEP -.-> AG_DEP
+    
+    %% Business Services Dependencies
+    AG_DEP -.-> US_DEP
+    AG_DEP -.-> PS_DEP
+    AG_DEP -.-> OS_DEP
+    AG_DEP -.-> PMS_DEP
+    AG_DEP -.-> SS_DEP
+    AG_DEP -.-> FS_DEP
+    AG_DEP -.-> PC_DEP
+    
+    %% Container Registry
+    GCR --> SD_DEP
+    GCR --> CC_DEP
+    GCR --> AG_DEP
+    GCR --> US_DEP
+    GCR --> PS_DEP
+    GCR --> OS_DEP
+    GCR --> PMS_DEP
+    GCR --> SS_DEP
+    GCR --> FS_DEP
+    GCR --> PC_DEP
+    
+    %% External Access
+    INTERNET --> LB1
+    INTERNET --> LB2
+    INTERNET --> LB3
+    LB1 --> AG_DEP
+    LB2 --> SD_DEP
+    LB3 --> ZIPKIN_SVC
+
+    %% Styling
+    classDef moduleGCP fill:#4285f4,stroke:#333,stroke-width:2px,color:#fff
+    classDef moduleK8s fill:#326ce5,stroke:#333,stroke-width:2px,color:#fff
+    classDef moduleMonitoring fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
+    classDef moduleMicroservices fill:#51cf66,stroke:#333,stroke-width:2px,color:#fff
+    classDef externalAccess fill:#ffd43b,stroke:#333,stroke-width:2px,color:#000
+    
+    class API1,API2,VPC,SUBNET,GKE,NODEPOOL,GCR moduleGCP
+    class NS,CM1,CM2 moduleK8s
+    class ZIPKIN_DEP,ZIPKIN_SVC moduleMonitoring
+    class SD_DEP,CC_DEP,AG_DEP,US_DEP,PS_DEP,OS_DEP,PMS_DEP,SS_DEP,FS_DEP,PC_DEP moduleMicroservices
+    class INTERNET,LB1,LB2,LB3 externalAccess 

@@ -1,0 +1,68 @@
+graph LR
+    subgraph "Terraform Modules Architecture"
+        subgraph "Module 1: GCP Infrastructure"
+            GCP_MOD["🏗️ GCP Infrastructure<br/>━━━━━━━━━━━━━━━<br/>• Google APIs<br/>• VPC Network<br/>• GKE Cluster<br/>• Node Pool<br/>• Network Security"]
+        end
+        
+        subgraph "Module 2: Kubernetes Base"
+            K8S_MOD["⚙️ Kubernetes Base<br/>━━━━━━━━━━━━━━━<br/>• Namespace Creation<br/>• ConfigMaps<br/>• Service Configuration<br/>• Environment Variables"]
+        end
+        
+        subgraph "Module 3: Monitoring"
+            MON_MOD["📊 Monitoring<br/>━━━━━━━━━━━━━━━<br/>• Zipkin Deployment<br/>• Zipkin Service<br/>• Health Checks<br/>• Tracing Setup"]
+        end
+        
+        subgraph "Module 4: Microservices"
+            MICRO_MOD["🚀 Microservices<br/>━━━━━━━━━━━━━━━<br/>• Service Discovery<br/>• Cloud Config<br/>• API Gateway<br/>• Business Services<br/>• Load Balancers"]
+        end
+    end
+    
+    subgraph "Deployment Flow"
+        STEP1["1️⃣ Infrastructure<br/>Setup GCP resources"]
+        STEP2["2️⃣ Kubernetes<br/>Configure base layer"]
+        STEP3["3️⃣ Monitoring<br/>Deploy observability"]
+        STEP4["4️⃣ Applications<br/>Deploy microservices"]
+    end
+    
+    subgraph "Key Resources by Module"
+        subgraph "GCP Resources"
+            GCP_LIST["• container.googleapis.com<br/>• compute.googleapis.com<br/>• VPC + Subnet<br/>• GKE Cluster<br/>• Node Pool (1-3 nodes)"]
+        end
+        
+        subgraph "K8s Resources"
+            K8S_LIST["• ecommerce namespace<br/>• ecommerce-config ConfigMap<br/>• cloud-config-files ConfigMap<br/>• Service URLs configuration"]
+        end
+        
+        subgraph "Monitoring Resources"
+            MON_LIST["• Zipkin Deployment<br/>• Zipkin LoadBalancer Service<br/>• Health/Readiness Probes<br/>• Resource Limits"]
+        end
+        
+        subgraph "Application Resources"
+            MICRO_LIST["• 10 Microservice Deployments<br/>• 10 Kubernetes Services<br/>• 3 LoadBalancer Services<br/>• 7 ClusterIP Services<br/>• Auto-scaling configuration"]
+        end
+    end
+    
+    %% Module Dependencies
+    GCP_MOD --> K8S_MOD
+    K8S_MOD --> MON_MOD
+    MON_MOD --> MICRO_MOD
+    
+    %% Flow Dependencies
+    STEP1 --> STEP2
+    STEP2 --> STEP3
+    STEP3 --> STEP4
+    
+    %% Module to Resource Mapping
+    GCP_MOD -.-> GCP_LIST
+    K8S_MOD -.-> K8S_LIST
+    MON_MOD -.-> MON_LIST
+    MICRO_MOD -.-> MICRO_LIST
+    
+    %% Styling
+    classDef moduleStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#000
+    classDef stepStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef resourceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
+    
+    class GCP_MOD,K8S_MOD,MON_MOD,MICRO_MOD moduleStyle
+    class STEP1,STEP2,STEP3,STEP4 stepStyle
+    class GCP_LIST,K8S_LIST,MON_LIST,MICRO_LIST resourceStyle 
